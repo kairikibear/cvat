@@ -40,15 +40,16 @@ services:
     build:
       context: .
       args:
-        http_proxy:
-        https_proxy:
+        http_proxy: ''
+        https_proxy: ''
         no_proxy: nuclio,${no_proxy}
-        socks_proxy:
+        socks_proxy: ''
         USER: "django"
         DJANGO_CONFIGURATION: "production"
         TZ: "Etc/UTC"
         CLAM_AV: "no"
     environment:
+      CVAT_SHARE_URL: "Mounted from /mnt/share host directory"
       DJANGO_MODWSGI_EXTRA_ARGS: ""
       ALLOWED_HOSTS: '*'
       CVAT_REDIS_HOST: "cvat_redis"
@@ -58,6 +59,7 @@ services:
       - cvat_keys:/home/django/keys
       - cvat_logs:/home/django/logs
       - cvat_models:/home/django/models
+      - cvat_share:/home/django/share:ro
 
   cvat_ui:
     container_name: cvat_ui
@@ -66,10 +68,10 @@ services:
     build:
       context: .
       args:
-        http_proxy:
-        https_proxy:
-        no_proxy:
-        socks_proxy:
+        http_proxy: ''
+        https_proxy: ''
+        no_proxy: ''
+        socks_proxy: ''
       dockerfile: Dockerfile.ui
 
     networks:
@@ -89,7 +91,7 @@ services:
     environment:
       CVAT_HOST: localhost
     ports:
-      - "8080:80"
+      - "10009:80"
     volumes:
       - ./cvat_proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./cvat_proxy/conf.d/cvat.conf.template:/etc/nginx/conf.d/cvat.conf.template:ro
@@ -107,8 +109,8 @@ services:
       - /tmp:/tmp
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      http_proxy:
-      https_proxy:
+      http_proxy: ''
+      https_proxy: ''
       no_proxy: 172.28.0.1,${no_proxy}
       NUCLIO_CHECK_FUNCTION_CONTAINERS_HEALTHINESS: "true"
     ports:
@@ -127,3 +129,8 @@ volumes:
   cvat_keys:
   cvat_logs:
   cvat_models:
+  cvat_share:
+    driver_opts:
+      type: none
+      device: /srv/data1/vision
+      o: bind
